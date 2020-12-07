@@ -160,8 +160,7 @@ def createDateBarChart(data):
 #         location = geolocator.geocode(address)
 #         return list(location)[0].split(', ')[-1]
 #     except TypeError:
-#         return address
-    
+#         return address 
 
 def createVerifiedLocationBarChart(data):
 
@@ -201,151 +200,164 @@ def createVerifiedLocationBarChart(data):
 
     return fig
     
-
-### ------------ Creating a bar chart for emotion columns ------------###
-def createEmotionLineChart(data):
+### ------------ Creating a heatmap emotion columns ------------###
+def createEmotionHeatMap(data):
 
     data = data[data['text'].notnull()].copy()
     
-    # data.account_created_at = pd.to_datetime(data['account_created_at']).dt.month
-    
-    # data['account_created_at'] = pd.to_datetime(data.account_created_at)
     data = data.sort_values(by='account_created_at')
     
-    # data = data[~data['anger'].isin([0])]
-    
-    # fig = px.line(data.head(), x='account_created_at', y='anger', labels={
-    #                   "x": "Year",
-    #                   "y": "Emotion"
-    #               },)
-
-    # fig.update_layout(
-    #     plot_bgcolor=colors['background'],
-    #     paper_bgcolor=colors['background'],
-    #     font_color=colors['text']
-    # )
-    
-    emotions = ['anger', 'anticipation', 'disgust',]
+    emotions = ['anger', 'anticipation', 'disgust', 'fear', 'joy', 'sadness', 'surprise', 'trust', 'negative', 'positive']
     
     fig = go.Figure(data=go.Heatmap(
-        z=data[['anger', 'anticipation', 'disgust']],
+        z=data[['anger', 'anticipation', 'disgust', 'fear', 'joy', 'sadness', 'surprise', 'trust', 'negative', 'positive']].transpose(),
         x=data.account_created_at,
         y=emotions,
-        colorscale='Viridis'))
+        colorscale='Turbo'))
     
-    print(data.account_created_at.head())
+    
+    fig.update_layout(
+        plot_bgcolor=colors['background'],
+        paper_bgcolor=colors['background'],
+        font_color=colors['text'],
+        width = 500,
+    )
+    
+    return fig
+
+### ------------ Creating a heatmap emotion columns ------------###
+def createFavouriteHistogram(data):
+
+    data = data[data['text'].notnull()].copy()
+    
+    data = data.sort_values(by='account_created_at')
+    
+    emotions = ['anger', 'anticipation', 'disgust', 'fear', 'joy', 'sadness', 'surprise', 'trust', 'negative', 'positive']
+    
+    fig = go.Figure(data=go.Heatmap(
+        z=data[['anger', 'anticipation', 'disgust', 'fear', 'joy', 'sadness', 'surprise', 'trust', 'negative', 'positive']].transpose(),
+        x=data.account_created_at,
+        y=emotions,
+        colorscale='Turbo'))
+    
+    
+    fig.update_layout(
+        plot_bgcolor=colors['background'],
+        paper_bgcolor=colors['background'],
+        font_color=colors['text'],
+        width = 500,
+    )
     
     return fig
 
 
 
-
-''' 
-Dash Part 
-'''
-
-
-app.layout = html.Div(
-    style={
-        'padding-left': '20%',
-        'padding-right': '20%',
-    },
-    children=[
-        html.H2(
-            children='COVID Disinformation',
-        ),
-        html.Div(
-            children='Dimension of the given data: '+str(df_shape)
-        ),
-        html.Br(),
-        html.Div(
-            children='Number of tweets in the given data set: ' +
-            str(df_shape[0])
-        ),
-        html.Br(),
-        html.Div(
-            children='Percentage of random data extracted from the given data: ' +
-            str(round((1-percent_of_data_used)*100))+" %"
-        ),
-        html.Br(),
-        html.Div(
-            children='Number of tweets after extraction: ' +
-            str(df_train_shape[0])
-        ),
-        html.Br(),
-        html.Div(
-            children='Name of all the columns: '+str(df_train_columns)
-        ),
-        html.Br(),
-        html.H3(
-            children='Top 10 Sources of Tweet',
-        ),
-        dcc.Graph(
-            id='pie-chart-source',
-            figure=createSourcePieChart(df_train)[0]
-        ),
-        html.Br(),
-        html.Div(
-            children='Maximum information is spread from '+str(createSourcePieChart(df_train)[1].index[0])+'.'
-        ),
-        html.Br(),
-        html.H3(
-            children='Length of tweets',
-        ),
-        dcc.Graph(
-            id='line-chart-display_text_width',
-            figure=createLengthAreaChart(df_train)
-        ),
-        html.Br(),
-        html.Div(
-            children='Average length of characters of a tweet is '+str(round(statistics.mean(df_train.display_text_width)))+'.'
-        ),
-        html.Br(),
-        html.H3(
-            children='Word Cloud',
-        ),
-        dcc.Graph(
-            id='wordcloud',
-            figure=createWordcloud(df_train)
-        ),
-        html.Br(),
-        html.H3(
-            children='Dates of creation of the accounts',
-        ),
-        dcc.Graph(
-            id='date',
-            figure=createDateBarChart(df_train)[0]
-        ),
-        html.Br(),
-        html.Div(
-            children='Maximum number of accounts were created in the years (descending order): '+str(list(createDateBarChart(df_train)[1].index[:5]))+'.'
-        ),
-        html.Br(),
-        html.H3(
-            children='Number of verified users per location',
-        ),
-        html.Div(
-            children='Note: Locations having 1 or 2 unverified accounts are removed. Duplicate names of the same location could have been merged to a single name. However, due to the lack of time and socket.timeout (bad internet connection), I was not able to do so.',
-        ),
-        dcc.Graph(
-            id='country',
-            figure=createVerifiedLocationBarChart(df_train)
-        ),
-        html.Br(),
-        html.H3(
-            children='Emotion development over time',
-        ),
-        dcc.Graph(
-            id='emotion',
-            figure=createEmotionLineChart(df_train)
-        ),
-    ])
+# '''
+# Dash Part 
+# '''
 
 
-'''
-Driver code
-'''
+# app.layout = html.Div(
+#     style={
+#         'padding-left': '20%',
+#         'padding-right': '20%',
+#     },
+#     children=[
+#         html.H2(
+#             children='COVID Disinformation',
+#         ),
+#         html.Div(
+#             children='Dimension of the given data: '+str(df_shape)
+#         ),
+#         html.Br(),
+#         html.Div(
+#             children='Number of tweets in the given data set: ' +
+#             str(df_shape[0])
+#         ),
+#         html.Br(),
+#         html.Div(
+#             children='Percentage of random data extracted from the given data: ' +
+#             str(round((1-percent_of_data_used)*100))+" %"
+#         ),
+#         html.Br(),
+#         html.Div(
+#             children='Number of tweets after extraction: ' +
+#             str(df_train_shape[0])
+#         ),
+#         html.Br(),
+#         html.Div(
+#             children='Name of all the columns: '+str(df_train_columns)
+#         ),
+#         html.Br(),
+#         html.H3(
+#             children='Top 10 Sources of Tweet',
+#         ),
+#         dcc.Graph(
+#             id='pie-chart-source',
+#             figure=createSourcePieChart(df_train)[0]
+#         ),
+#         html.Br(),
+#         html.Div(
+#             children='Maximum information is spread from '+str(createSourcePieChart(df_train)[1].index[0])+'.'
+#         ),
+#         html.Br(),
+#         html.H3(
+#             children='Length of tweets',
+#         ),
+#         dcc.Graph(
+#             id='line-chart-display_text_width',
+#             figure=createLengthAreaChart(df_train)
+#         ),
+#         html.Br(),
+#         html.Div(
+#             children='Average length of characters of a tweet is '+str(round(statistics.mean(df_train.display_text_width)))+'.'
+#         ),
+#         html.Br(),
+#         html.H3(
+#             children='Word Cloud',
+#         ),
+#         dcc.Graph(
+#             id='wordcloud',
+#             figure=createWordcloud(df_train)
+#         ),
+#         html.Br(),
+#         html.H3(
+#             children='Dates of creation of the accounts',
+#         ),
+#         dcc.Graph(
+#             id='date',
+#             figure=createDateBarChart(df_train)[0]
+#         ),
+#         html.Br(),
+#         html.Div(
+#             children='Maximum number of accounts were created in the years (descending order): '+str(list(createDateBarChart(df_train)[1].index[:5]))+'.'
+#         ),
+#         html.Br(),
+#         html.H3(
+#             children='Number of verified users per location',
+#         ),
+#         html.Div(
+#             children='Note: Locations having 1 or 2 unverified accounts are removed. Duplicate names of the same location could have been merged to a single name. However, due to socket.timeout error (poor internet connection), I was not able to do so.',
+#         ),
+#         dcc.Graph(
+#             id='country',
+#             figure=createVerifiedLocationBarChart(df_train)
+#         ),
+#         html.Br(),
+#         html.H3(
+#             children='Emotion development over time',
+#         ),
+#         dcc.Graph(
+#             id='emotion',
+#             figure=createEmotionHeatMap(df_train)
+#         ),
+#     ])
 
 
-if __name__ == '__main__':
-    app.run_server(debug=True)
+# '''
+# Driver code
+# '''
+
+
+# if __name__ == '__main__':
+#     app.run_server(debug=True)
