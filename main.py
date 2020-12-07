@@ -10,6 +10,9 @@ from wordcloud import WordCloud
 import matplotlib.pyplot as plt
 from nltk.corpus import stopwords
 import statistics
+from geopy.geocoders import Nominatim
+import plotly.graph_objects as go
+import plotly.figure_factory as ff
 
 app = dash.Dash(__name__)
 
@@ -148,143 +151,201 @@ def createDateBarChart(data):
     return fig, count_by_year
     
 ### ------------ Creating a bar chart for 'verified' and 'location' column ------------###
-# def createVerifiedLocationBarChart(data):
 
+# # convert locations into country names
+# geolocator = Nominatim(user_agent = "Covid Disinformation") 
 
-
-# data_location = df_train[df_train['location'].notnull()].copy()
-# count_by_location = pd.value_counts(data_location.location)
-# print(len(count_by_location))
-
-# data_verified = df_train[df_train['verified'].notnull()].copy()
-# count_by_verified = pd.value_counts(data_location.verified)
-# print(count_by_verified)
-
-data = df_train[df_train['location'].notna()]
-
-false_count_by_country = pd.value_counts(data['location'].loc[data['verified'] == False])
-df_false_count_by_country = pd.DataFrame({'location':false_count_by_country.index, 'count':false_count_by_country.values})
-df_false_count_by_country['verified'] = [False]*len(df_false_count_by_country)
-df_false_count_by_country = df_false_count_by_country[~df_false_count_by_country
-                                                      ['count'].isin([1])]
-
-true_count_by_country = pd.value_counts(data['location'].loc[data['verified'] == True])
-df_true_count_by_country = pd.DataFrame({'location':true_count_by_country.index, 'count':true_count_by_country.values})
-df_true_count_by_country['verified'] = [True]*len(df_true_count_by_country)
-df_true_count_by_country = df_true_count_by_country[~df_true_count_by_country
-                                                      ['count'].isin([1])]
-
-result = pd.concat([df_true_count_by_country, df_false_count_by_country])
-
-
-
-
-fig = px.bar(result, x='location', y='count', color='verified', labels={
-                    "x": "Year",
-                    "y": "Number of Accounts Created"
-                },)
-
-fig.show()
-
-# fig.update_layout(
-#     plot_bgcolor=colors['background'],
-#     paper_bgcolor=colors['background'],
-#     font_color=colors['text']
-# )
-    
-    # return fig, count_by_year
+# def getCountry(address):
+#     try:
+#         location = geolocator.geocode(address)
+#         return list(location)[0].split(', ')[-1]
+#     except TypeError:
+#         return address
     
 
+def createVerifiedLocationBarChart(data):
+
+    data = df_train[df_train['text'].notnull()].copy()
+
+    data = data[data['location'].notna()]
+
+    false_count_by_country = pd.value_counts(data['location'].loc[data['verified'] == False])
+    df_false_count_by_country = pd.DataFrame({'location':false_count_by_country.index, 'count':false_count_by_country.values})
+    df_false_count_by_country['verified'] = [False]*len(df_false_count_by_country)
+    df_false_count_by_country = df_false_count_by_country[~df_false_count_by_country
+                                                        ['count'].isin([1, 2])]
+
+    true_count_by_country = pd.value_counts(data['location'].loc[data['verified'] == True])
+    df_true_count_by_country = pd.DataFrame({'location':true_count_by_country.index, 'count':true_count_by_country.values})
+    df_true_count_by_country['verified'] = [True]*len(df_true_count_by_country)
+    # df_true_count_by_country = df_true_count_by_country[~df_true_count_by_country
+                                                        # ['count'].isin([1, 2])]
+
+    result = pd.concat([df_true_count_by_country, df_false_count_by_country])
 
 
 
-# ''' 
-# Dash Part 
-# '''
+    # for num in range(0, len(result.location), 30):
+    #     result['location'][num:num+30] = result['location'][num:num+30].map(getCountry)
+
+    fig = px.bar(result, x='location', y='count', color='verified', labels={
+                        "x": "Country",
+                        "y": "Number of tweet"
+                    },)
+
+    fig.update_layout(
+        plot_bgcolor=colors['background'],
+        paper_bgcolor=colors['background'],
+        font_color=colors['text']
+    )
+
+    return fig
+    
+
+### ------------ Creating a bar chart for emotion columns ------------###
+def createEmotionLineChart(data):
+
+    data = data[data['text'].notnull()].copy()
+    
+    # data.account_created_at = pd.to_datetime(data['account_created_at']).dt.month
+    
+    # data['account_created_at'] = pd.to_datetime(data.account_created_at)
+    data = data.sort_values(by='account_created_at')
+    
+    # data = data[~data['anger'].isin([0])]
+    
+    # fig = px.line(data.head(), x='account_created_at', y='anger', labels={
+    #                   "x": "Year",
+    #                   "y": "Emotion"
+    #               },)
+
+    # fig.update_layout(
+    #     plot_bgcolor=colors['background'],
+    #     paper_bgcolor=colors['background'],
+    #     font_color=colors['text']
+    # )
+    
+    emotions = ['anger', 'anticipation', 'disgust',]
+    
+    fig = go.Figure(data=go.Heatmap(
+        z=data[['anger', 'anticipation', 'disgust']],
+        x=data.account_created_at,
+        y=emotions,
+        colorscale='Viridis'))
+    
+    print(data.account_created_at.head())
+    
+    return fig
 
 
-# app.layout = html.Div(
-#     style={
-#         'padding-left': '20%',
-#         'padding-right': '20%',
-#     },
-#     children=[
-#         html.H2(
-#             children='COVID Disinformation',
-#         ),
-#         html.Div(
-#             children='Dimension of the given data: '+str(df_shape)
-#         ),
-#         html.Br(),
-#         html.Div(
-#             children='Number of tweets in the given data set: ' +
-#             str(df_shape[0])
-#         ),
-#         html.Br(),
-#         html.Div(
-#             children='Percentage of random data extracted from the given data: ' +
-#             str(round((1-percent_of_data_used)*100))+" %"
-#         ),
-#         html.Br(),
-#         html.Div(
-#             children='Number of tweets after extraction: ' +
-#             str(df_train_shape[0])
-#         ),
-#         html.Br(),
-#         html.Div(
-#             children='Name of all the columns: '+str(df_train_columns)
-#         ),
-#         html.Br(),
-#         html.H3(
-#             children='Top 10 Sources of Tweet',
-#         ),
-#         dcc.Graph(
-#             id='pie-chart-source',
-#             figure=createSourcePieChart(df_train)[0]
-#         ),
-#         html.Br(),
-#         html.Div(
-#             children='Maximum information is spread from '+str(createSourcePieChart(df_train)[1].index[0])+'.'
-#         ),
-#         html.Br(),
-#         html.H3(
-#             children='Length of tweets',
-#         ),
-#         dcc.Graph(
-#             id='line-chart-display_text_width',
-#             figure=createLengthAreaChart(df_train)
-#         ),
-#         html.Br(),
-#         html.Div(
-#             children='Average length of characters of a tweet is '+str(round(statistics.mean(df_train.display_text_width)))+'.'
-#         ),
-#         html.Br(),
-#         html.H3(
-#             children='Word Cloud',
-#         ),
-#         dcc.Graph(
-#             id='wordcloud',
-#             figure=createWordcloud(df_train)
-#         ),
-#         html.Br(),
-#         html.H3(
-#             children='Dates of creation of the accounts',
-#         ),
-#         dcc.Graph(
-#             id='date',
-#             figure=createDateBarChart(df_train)[0]
-#         ),
-#         html.Br(),
-#         html.Div(
-#             children='Maximum number of accounts were created in the years (descending order): '+str(list(createDateBarChart(df_train)[1].index[:5]))+'.'
-#         ),
-#     ])
 
 
-# '''
-# Driver code
-# '''
+''' 
+Dash Part 
+'''
 
 
-# if __name__ == '__main__':
-#     app.run_server(debug=True)
+app.layout = html.Div(
+    style={
+        'padding-left': '20%',
+        'padding-right': '20%',
+    },
+    children=[
+        html.H2(
+            children='COVID Disinformation',
+        ),
+        html.Div(
+            children='Dimension of the given data: '+str(df_shape)
+        ),
+        html.Br(),
+        html.Div(
+            children='Number of tweets in the given data set: ' +
+            str(df_shape[0])
+        ),
+        html.Br(),
+        html.Div(
+            children='Percentage of random data extracted from the given data: ' +
+            str(round((1-percent_of_data_used)*100))+" %"
+        ),
+        html.Br(),
+        html.Div(
+            children='Number of tweets after extraction: ' +
+            str(df_train_shape[0])
+        ),
+        html.Br(),
+        html.Div(
+            children='Name of all the columns: '+str(df_train_columns)
+        ),
+        html.Br(),
+        html.H3(
+            children='Top 10 Sources of Tweet',
+        ),
+        dcc.Graph(
+            id='pie-chart-source',
+            figure=createSourcePieChart(df_train)[0]
+        ),
+        html.Br(),
+        html.Div(
+            children='Maximum information is spread from '+str(createSourcePieChart(df_train)[1].index[0])+'.'
+        ),
+        html.Br(),
+        html.H3(
+            children='Length of tweets',
+        ),
+        dcc.Graph(
+            id='line-chart-display_text_width',
+            figure=createLengthAreaChart(df_train)
+        ),
+        html.Br(),
+        html.Div(
+            children='Average length of characters of a tweet is '+str(round(statistics.mean(df_train.display_text_width)))+'.'
+        ),
+        html.Br(),
+        html.H3(
+            children='Word Cloud',
+        ),
+        dcc.Graph(
+            id='wordcloud',
+            figure=createWordcloud(df_train)
+        ),
+        html.Br(),
+        html.H3(
+            children='Dates of creation of the accounts',
+        ),
+        dcc.Graph(
+            id='date',
+            figure=createDateBarChart(df_train)[0]
+        ),
+        html.Br(),
+        html.Div(
+            children='Maximum number of accounts were created in the years (descending order): '+str(list(createDateBarChart(df_train)[1].index[:5]))+'.'
+        ),
+        html.Br(),
+        html.H3(
+            children='Number of verified users per location',
+        ),
+        html.Div(
+            children='Note: Locations having 1 or 2 unverified accounts are removed. Duplicate names of the same location could have been merged to a single name. However, due to the lack of time and socket.timeout (bad internet connection), I was not able to do so.',
+        ),
+        dcc.Graph(
+            id='country',
+            figure=createVerifiedLocationBarChart(df_train)
+        ),
+        html.Br(),
+        html.H3(
+            children='Emotion development over time',
+        ),
+        dcc.Graph(
+            id='emotion',
+            figure=createEmotionLineChart(df_train)
+        ),
+    ])
+
+
+'''
+Driver code
+'''
+
+
+if __name__ == '__main__':
+    app.run_server(debug=True)
