@@ -25,4 +25,4 @@ Dash is running on http://127.0.0.1:8050/
    Use a production WSGI server instead.
  * Debug mode: on
  </pre>
- Use the address (http://127.0.0.1:8050/) to view the webpage on a browser.
+ Use the given address (e.g. http://127.0.0.1:8050/) to view the webpage on a browser.
