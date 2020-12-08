@@ -291,7 +291,7 @@ app.layout = html.Div(
         html.Br(),
         html.Div(
             children='Percentage of random data extracted from the given data: ' +
-            str(round((1-percent_of_data_used)*100))+" %"
+            str(round((1-percent_of_data_used)*100))+"%"
         ),
         html.Br(),
         html.Div(
