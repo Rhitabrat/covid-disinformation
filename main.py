@@ -45,8 +45,8 @@ df_train, df_test = train_test_split(df, test_size=percent_of_data_used)
 # get the shape of df_train
 df_train_shape = df_train.shape
 
-# get the column names
-df_train_columns = df_train.columns.values
+# # get the column names
+# df_train_columns = df_train.columns.values
 
 
 ### ------------ Creating a piechart for 'source' column ------------###
@@ -84,14 +84,14 @@ def createLengthAreaChart(data):
         paper_bgcolor=colors['background'],
         font_color=colors['text']
     )
-    
+
     return fig
 
 ### ------------ Creating a word cloud for the tweets ------------###
 def createWordcloud(data):
 
     data = data[data['text'].notnull()].copy()
-    
+
     # remove hyperlinks
     data['text'] = data['text'].str.replace('http\S+|www.\S+', '', case=False)
 
@@ -100,22 +100,23 @@ def createWordcloud(data):
     data['text'].apply(lambda x: [item for item in x if item not in stop])
 
     # remove @username
-    data['text'] = data['text'].replace('@[\w]+', '',regex=True)
+    data['text'] = data['text'].replace('@[\w]+', '', regex=True)
 
     text = data["text"].values
 
-    wordcloud = WordCloud(background_color=colors['background'], collocations=False).generate(str(text))
+    wordcloud = WordCloud(
+        background_color=colors['background'], collocations=False).generate(str(text))
 
     figure = plt.figure()
     figure.set_facecolor(colors['background'])
-    
+
     plt.imshow(wordcloud)
     plt.axis("off")
     plt.savefig('wordcloud.png')
-    
+
     img = io.imread('wordcloud.png')
     fig = px.imshow(img)
-    
+
     fig.update_layout(
         plot_bgcolor=colors['background'],
         paper_bgcolor=colors['background'],
@@ -123,44 +124,45 @@ def createWordcloud(data):
         yaxis_visible=False,
         yaxis_showticklabels=False,
         xaxis_visible=False,
-        xaxis_showticklabels=False,   
+        xaxis_showticklabels=False,
     )
-    
-    
+
     return fig
 
 ### ------------ Creating a bar chart for 'account_created_at' column ------------###
 def createDateBarChart(data):
 
     data = data[data['text'].notnull()].copy()
-    
-    data.account_created_at = pd.to_datetime(data['account_created_at']).dt.year
-    
+
+    data.account_created_at = pd.to_datetime(
+        data['account_created_at']).dt.year
+
     count_by_year = pd.value_counts(data.account_created_at)
-    fig = px.bar(data, x=count_by_year.index,y=count_by_year.values,labels={
-                      "x": "Year",
-                      "y": "Number of Accounts Created"
-                  },)
+    fig = px.bar(data, x=count_by_year.index, y=count_by_year.values, labels={
+        "x": "Year",
+        "y": "Number of Accounts Created"
+    },)
 
     fig.update_layout(
         plot_bgcolor=colors['background'],
         paper_bgcolor=colors['background'],
         font_color=colors['text']
     )
-    
+
     return fig, count_by_year
-    
+
 ### ------------ Creating a bar chart for 'verified' and 'location' column ------------###
 
 # # convert locations into country names
-# geolocator = Nominatim(user_agent = "Covid Disinformation") 
+# geolocator = Nominatim(user_agent = "Covid Disinformation")
 
 # def getCountry(address):
 #     try:
 #         location = geolocator.geocode(address)
 #         return list(location)[0].split(', ')[-1]
 #     except TypeError:
-#         return address 
+#         return address
+
 
 def createVerifiedLocationBarChart(data):
 
@@ -168,29 +170,32 @@ def createVerifiedLocationBarChart(data):
 
     data = data[data['location'].notna()]
 
-    false_count_by_country = pd.value_counts(data['location'].loc[data['verified'] == False])
-    df_false_count_by_country = pd.DataFrame({'location':false_count_by_country.index, 'count':false_count_by_country.values})
-    df_false_count_by_country['verified'] = [False]*len(df_false_count_by_country)
+    false_count_by_country = pd.value_counts(
+        data['location'].loc[data['verified'] == False])
+    df_false_count_by_country = pd.DataFrame(
+        {'location': false_count_by_country.index, 'count': false_count_by_country.values})
+    df_false_count_by_country['verified'] = [
+        False]*len(df_false_count_by_country)
     df_false_count_by_country = df_false_count_by_country[~df_false_count_by_country
-                                                        ['count'].isin([1, 2])]
+                                                          ['count'].isin([1, 2])]
 
-    true_count_by_country = pd.value_counts(data['location'].loc[data['verified'] == True])
-    df_true_count_by_country = pd.DataFrame({'location':true_count_by_country.index, 'count':true_count_by_country.values})
+    true_count_by_country = pd.value_counts(
+        data['location'].loc[data['verified'] == True])
+    df_true_count_by_country = pd.DataFrame(
+        {'location': true_count_by_country.index, 'count': true_count_by_country.values})
     df_true_count_by_country['verified'] = [True]*len(df_true_count_by_country)
     # df_true_count_by_country = df_true_count_by_country[~df_true_count_by_country
-                                                        # ['count'].isin([1, 2])]
+    # ['count'].isin([1, 2])]
 
     result = pd.concat([df_true_count_by_country, df_false_count_by_country])
-
-
 
     # for num in range(0, len(result.location), 30):
     #     result['location'][num:num+30] = result['location'][num:num+30].map(getCountry)
 
     fig = px.bar(result, x='location', y='count', color='verified', labels={
-                        "x": "Country",
-                        "y": "Number of tweet"
-                    },)
+        "x": "Country",
+        "y": "Number of tweet"
+    },)
 
     fig.update_layout(
         plot_bgcolor=colors['background'],
@@ -199,51 +204,57 @@ def createVerifiedLocationBarChart(data):
     )
 
     return fig
-    
+
 ### ------------ Creating a heatmap emotion columns ------------###
 def createEmotionHeatMap(data):
 
     data = data[data['text'].notnull()].copy()
-    
+
     data = data.sort_values(by='account_created_at')
-    
-    emotions = ['anger', 'anticipation', 'disgust', 'fear', 'joy', 'sadness', 'surprise', 'trust', 'negative', 'positive']
-    
+
+    emotions = ['anger', 'anticipation', 'disgust', 'fear', 'joy',
+                'sadness', 'surprise', 'trust', 'negative', 'positive']
+
     fig = go.Figure(data=go.Heatmap(
-        z=data[['anger', 'anticipation', 'disgust', 'fear', 'joy', 'sadness', 'surprise', 'trust', 'negative', 'positive']].transpose(),
+        z=data[['anger', 'anticipation', 'disgust', 'fear', 'joy', 'sadness',
+                'surprise', 'trust', 'negative', 'positive']].transpose(),
         x=data.account_created_at,
         y=emotions,
         colorscale='Turbo'))
-    
-    
+
     fig.update_layout(
         plot_bgcolor=colors['background'],
         paper_bgcolor=colors['background'],
         font_color=colors['text'],
-        width = 500,
+        width=500,
     )
-    
+
     return fig
 
-### ------------ Creating a heatmap emotion columns ------------###
+### ------------ Creating a buuble chart for 'favourite_count' column ------------###
 def createFavouriteHistogram(data):
 
     data = data[data['text'].notnull()].copy()
-    
-    # data = data.sort_values(by='account_created_at')
-    
-    fig = px.histogram(data, x='favorite_count')
-    
-    
-    
+
+    data = data.sort_values(by='account_created_at')
+
+    fig = go.Figure(data=[go.Scatter(
+        y=data.favorite_count,
+        mode='markers'
+    )
+    ])
+
     fig.update_layout(
         plot_bgcolor=colors['background'],
         paper_bgcolor=colors['background'],
         font_color=colors['text'],
+        xaxis=dict(
+            title='Tweet Index'),
+        yaxis=dict(
+            title='Favourite Count')
     )
-    
-    return fig
 
+    return fig
 
 
 '''
@@ -278,10 +289,10 @@ app.layout = html.Div(
             children='Number of tweets after extraction: ' +
             str(df_train_shape[0])
         ),
-        html.Br(),
-        html.Div(
-            children='Name of all the columns: '+str(df_train_columns)
-        ),
+        # html.Br(),
+        # html.Div(
+        #     children='Name of all the columns: '+str(df_train_columns)
+        # ),
         html.Br(),
         html.H3(
             children='Top 10 Sources of Tweet',
@@ -292,7 +303,8 @@ app.layout = html.Div(
         ),
         html.Br(),
         html.Div(
-            children='Maximum information is spread from '+str(createSourcePieChart(df_train)[1].index[0])+'.'
+            children='Maximum information is spread from ' +
+            str(createSourcePieChart(df_train)[1].index[0])+'.'
         ),
         html.Br(),
         html.H3(
@@ -304,7 +316,8 @@ app.layout = html.Div(
         ),
         html.Br(),
         html.Div(
-            children='Average length of characters of a tweet is '+str(round(statistics.mean(df_train.display_text_width)))+'.'
+            children='Average length of characters of a tweet is ' +
+            str(round(statistics.mean(df_train.display_text_width)))+'.'
         ),
         html.Br(),
         html.H3(
@@ -324,15 +337,17 @@ app.layout = html.Div(
         ),
         html.Br(),
         html.Div(
-            children='Maximum number of accounts were created in the years (descending order): '+str(list(createDateBarChart(df_train)[1].index[:5]))+'.'
+            children='Maximum number of accounts were created in the years (descending order): '+str(
+                list(createDateBarChart(df_train)[1].index[:5]))+'.'
         ),
         html.Br(),
         html.H3(
             children='Number of verified users per location',
         ),
         html.Div(
-            children='Note: Locations having 1 or 2 unverified accounts are removed. Duplicate names of the same location could have been merged to a single name. However, due to socket.timeout error (poor internet connection), I was not able to do so.',
+            children='Note: Locations having 1 or 2 unverified accounts are removed. Duplicate names of the same location could have been merged to a common name. However, due to socket.timeout error (poor internet connection), I was not able to do so. I will have to look for other options.',
         ),
+        html.Br(),
         dcc.Graph(
             id='country',
             figure=createVerifiedLocationBarChart(df_train)
@@ -347,7 +362,7 @@ app.layout = html.Div(
         ),
         html.Br(),
         html.H3(
-            children='Number of people who favourited the information',
+            children='Number of favourites per tweet',
         ),
         dcc.Graph(
             id='favourite',
