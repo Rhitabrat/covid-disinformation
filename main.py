@@ -4,7 +4,6 @@ import dash_html_components as html
 import plotly.express as px
 import pandas as pd
 from sklearn.model_selection import train_test_split
-import os
 from skimage import io
 from wordcloud import WordCloud
 import matplotlib.pyplot as plt
@@ -69,6 +68,8 @@ def createSourcePieChart(data):
     return fig, top_sources
 
 ### ------------ Creating an area chart for 'display_text_width' column ------------###
+
+
 def createLengthAreaChart(data):
     # df = data.display_text_width
 
@@ -88,6 +89,8 @@ def createLengthAreaChart(data):
     return fig
 
 ### ------------ Creating a word cloud for the tweets ------------###
+
+
 def createWordcloud(data):
 
     data = data[data['text'].notnull()].copy()
@@ -130,6 +133,8 @@ def createWordcloud(data):
     return fig
 
 ### ------------ Creating a bar chart for 'account_created_at' column ------------###
+
+
 def createDateBarChart(data):
 
     data = data[data['text'].notnull()].copy()
@@ -206,6 +211,8 @@ def createVerifiedLocationBarChart(data):
     return fig
 
 ### ------------ Creating a heatmap emotion columns ------------###
+
+
 def createEmotionHeatMap(data):
 
     data = data[data['text'].notnull()].copy()
@@ -232,6 +239,8 @@ def createEmotionHeatMap(data):
     return fig
 
 ### ------------ Creating a buuble chart for 'favourite_count' column ------------###
+
+
 def createFavouriteHistogram(data):
 
     data = data[data['text'].notnull()].copy()
